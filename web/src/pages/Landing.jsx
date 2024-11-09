@@ -1,11 +1,23 @@
 import { motion } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, MessageSquare, Shield, Zap } from "lucide-react"
+import { ArrowRight, MessageSquare, Shield, Zap, Users } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
+import Footer from "@/components/common/Footer"
 
 export default function Landing() {
   const navigate = useNavigate()
+
+  const floatingIcons = [
+    { icon: <MessageSquare className="h-6 w-6" />, x: -20, y: -15, delay: 0 },
+    { icon: <Users className="h-6 w-6" />, x: 20, y: 20, delay: 0.2 },
+    { icon: <MessageSquare className="h-4 w-4" />, x: 15, y: -25, delay: 0.4 },
+    { icon: <Users className="h-4 w-4" />, x: -15, y: 15, delay: 0.6 },
+    { icon: <MessageSquare className="h-6 w-6" />, x: -20, y: -15, delay: 0 },
+    { icon: <Users className="h-6 w-6" />, x: 20, y: 20, delay: 0.2 },
+    { icon: <MessageSquare className="h-4 w-4" />, x: 15, y: -25, delay: 0.4 },
+    { icon: <Users className="h-4 w-4" />, x: -15, y: 15, delay: 0.6 },
+  ]
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +40,33 @@ export default function Landing() {
       </nav>
 
       <main className="container mx-auto px-4 md:px-6 lg:px-8 pt-24">
-        <section className="py-12 md:py-24">
+        <section className="py-12 md:py-24 relative">
+          {/* Floating Icons */}
+          {floatingIcons.map((item, index) => (
+            <motion.div
+              key={index}
+              className="absolute text-primary/40"
+              initial={{ opacity: 0, x: 0, y: 0 }}
+              animate={{ 
+                opacity: [0.4, 0.8, 0.4],
+                x: [0, item.x, 0],
+                y: [0, item.y, 0]
+              }}
+              transition={{
+                duration: 3,
+                delay: item.delay,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              style={{
+                left: `${50 + (index * 10)}%`,
+                top: `${30 + (index * 5)}%`
+              }}
+            >
+              {item.icon}
+            </motion.div>
+          ))}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -148,6 +186,7 @@ export default function Landing() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   )
 }
