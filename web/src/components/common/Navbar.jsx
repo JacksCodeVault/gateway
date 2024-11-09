@@ -1,7 +1,7 @@
 import { motion } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { MessageSquare, Settings, Users, LogOut, Smartphone } from "lucide-react"
+import { MessageSquare, Settings, Users, LogOut, Smartphone, Key } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 
 export default function Navbar() {
@@ -29,14 +29,22 @@ export default function Navbar() {
             <MessageSquare className="mr-2 h-4 w-4" />
             Messages
           </Button>
-          <Button 
+          {/* <Button 
             variant={location.pathname === '/dashboard/contacts' ? 'default' : 'ghost'}
             className="flex items-center"
             onClick={() => navigate('/dashboard/contacts')}
           >
             <Users className="mr-2 h-4 w-4" />
             Contacts
-          </Button>
+          </Button> */}
+          <Button 
+  variant={location.pathname === '/dashboard/api-keys' ? 'default' : 'ghost'}
+  className="flex items-center"
+  onClick={() => navigate('/dashboard/api-keys')}
+>
+  <Key className="mr-2 h-4 w-4" />
+  API Keys
+</Button>
           <Button 
             variant={location.pathname === '/dashboard/devices' ? 'default' : 'ghost'}
             className="flex items-center"
