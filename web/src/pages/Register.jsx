@@ -1,12 +1,45 @@
-
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Link } from "react-router-dom"
-import { User, Mail, Lock } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
+import { User, Mail, Lock, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function Register() {
+  const navigate = useNavigate()
+  const { register } = useAuth()
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  })
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      await register(formData)
+      toast.success('Registration successful')
+      navigate('/dashboard')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Registration failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.id]: e.target.value
+    }))
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
@@ -41,12 +74,20 @@ export default function Register() {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="name" type="text" placeholder="John Doe" className="pl-10" />
+                <Input 
+                  id="name" 
+                  type="text" 
+                  placeholder="John Doe" 
+                  className="pl-10"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </div>
 
@@ -54,7 +95,15 @@ export default function Register() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="name@example.com" className="pl-10" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  className="pl-10"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </div>
 
@@ -62,12 +111,28 @@ export default function Register() {
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" className="pl-10" />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  className="pl-10"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </div>
 
-            <Button className="w-full">Create Account</Button>
-          </div>
+            <Button className="w-full" type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                'Create Account'
+              )}
+            </Button>
+          </form>
         </div>
 
         <p className="text-center text-sm text-muted-foreground">
