@@ -23,10 +23,9 @@ api.interceptors.request.use(
 export const authAPI = {
   register: (data) => api.post('/api/v1/auth/register', data),
   login: (data) => api.post('/api/v1/auth/login', data),
-  generateApiKey: () => api.post('/api/v1/auth/api-keys'),
+  loginWithGoogle: (data) => api.post('/api/v1/auth/google', data),
   getProfile: () => api.get('/api/v1/auth/who-am-i')
 }
-
 export const userAPI = {
   getProfile: () => api.get('/api/v1/users/profile'),
   updateProfile: (data) => api.patch('/api/v1/users/profile', data)

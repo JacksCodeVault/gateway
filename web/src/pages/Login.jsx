@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth"
 
 export default function Login() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -39,6 +39,17 @@ export default function Login() {
     }))
   }
 
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      toast.success('Login successful');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login Error:', error);
+      toast.error(`Google login failed: ${error.message}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
@@ -52,7 +63,7 @@ export default function Login() {
         </div>
 
         <div className="space-y-4">
-          <Button variant="outline" className="w-full" onClick={() => {}}>
+          <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
               <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"/>
               <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 16.0099 17.34 17.26 16.12 18.0949L19.93 21.1C22.1899 19.0099 23.49 15.92 23.49 12.275Z" fill="#4285F4"/>
