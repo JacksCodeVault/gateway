@@ -30,28 +30,28 @@
     },
     login: async (credentials) => {
       const response = await authAPI.login(credentials)
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token)
+      if (response.data.data.accessToken) {
+        localStorage.setItem('token', response.data.data.accessToken)
+        return response.data.data
       }
-      return response.data
+      throw new Error('No token received')
     },
 
     register: async (userData) => {
       const response = await authAPI.register(userData)
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token)
+      if (response.data.data.accessToken) {
+        localStorage.setItem('token', response.data.data.accessToken)
+        return response.data.data
       }
-      return response.data
+      throw new Error('No token received')
     },
+  
 
     logout: () => {
       localStorage.removeItem('token')
     },
 
     getCurrentUser: async () => {
-      const token = localStorage.getItem('token')
-      if (!token) throw new Error('No token found')
-      
       return await authAPI.getProfile()
     }
   }

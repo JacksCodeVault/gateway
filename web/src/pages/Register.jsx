@@ -23,15 +23,28 @@ export default function Register() {
     setIsLoading(true)
 
     try {
-      await register(formData)
+      const formPayload = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        confirmPassword: formData.password
+      }
+      await register(formPayload)
       toast.success('Registration successful')
       navigate('/dashboard')
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed')
+      if (error.response?.status === 400 && error.response?.data?.message.includes('email')) {
+        toast.error('Email already registered. Please use a different email.')
+      } else {
+        toast.error('Registration failed. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }
   }
+
+
+
 
   const handleGoogleSignup = async () => {
     try {

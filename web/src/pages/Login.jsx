@@ -26,11 +26,18 @@ export default function Login() {
       toast.success('Login successful')
       navigate('/dashboard')
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed')
+      if (error.response?.status === 401) {
+        toast.error('Invalid email or password')
+      } else if (error.response?.status === 404) {
+        toast.error('Account not found')
+      } else {
+        toast.error('Login failed. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }
   }
+
 
   const handleChange = (e) => {
     setFormData(prev => ({

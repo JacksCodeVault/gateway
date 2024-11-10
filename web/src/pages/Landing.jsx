@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, MessageSquare, Shield, Zap, Users } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import Footer from "@/components/common/Footer"
+import GridPattern from "@/components/ui/grid-pattern";
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -12,15 +13,11 @@ export default function Landing() {
     { icon: <MessageSquare className="h-6 w-6" />, x: -20, y: -15, delay: 0 },
     { icon: <Users className="h-6 w-6" />, x: 20, y: 20, delay: 0.2 },
     { icon: <MessageSquare className="h-4 w-4" />, x: 15, y: -25, delay: 0.4 },
-    { icon: <Users className="h-4 w-4" />, x: -15, y: 15, delay: 0.6 },
-    { icon: <MessageSquare className="h-6 w-6" />, x: -20, y: -15, delay: 0 },
-    { icon: <Users className="h-6 w-6" />, x: 20, y: 20, delay: 0.2 },
-    { icon: <MessageSquare className="h-4 w-4" />, x: 15, y: -25, delay: 0.4 },
-    { icon: <Users className="h-4 w-4" />, x: -15, y: 15, delay: 0.6 },
+    { icon: <Users className="h-4 w-4" />, x: -15, y: 15, delay: 0.6 }
   ]
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       <nav className="fixed w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6 lg:px-8">
           <motion.div
@@ -40,7 +37,7 @@ export default function Landing() {
       </nav>
 
       <main className="container mx-auto px-4 md:px-6 lg:px-8 pt-24">
-        <section className="py-12 md:py-24 relative">
+        <section className="py-12 md:py-24">
           {/* Floating Icons */}
           {floatingIcons.map((item, index) => (
             <motion.div

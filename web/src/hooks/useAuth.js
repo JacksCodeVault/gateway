@@ -9,6 +9,7 @@ const useAuth = create((set) => ({
   login: async (credentials) => {
     const data = await authService.login(credentials)
     set({ user: data.user, isAuthenticated: true, isLoading: false })
+    return data
   },
 
   loginWithGoogle: async () => {
@@ -24,9 +25,10 @@ const useAuth = create((set) => ({
   register: async (userData) => {
     const data = await authService.register(userData)
     set({ user: data.user, isAuthenticated: true, isLoading: false })
+    return data
   },
 
-  checkAuth: async () => {
+/*   checkAuth: async () => {
     const token = localStorage.getItem('token')
     if (!token) {
       set({ user: null, isAuthenticated: false, isLoading: false })
@@ -35,6 +37,7 @@ const useAuth = create((set) => ({
     
     try {
       const data = await authService.getCurrentUser()
+      console.log('Current User:', data.user)
       set({ 
         user: data.user, 
         isAuthenticated: true, 
@@ -48,6 +51,15 @@ const useAuth = create((set) => ({
         isLoading: false 
       })
     }
-  }
+  } */
+
+    checkAuth: async () => {
+      try {
+        const { data } = await authService.getCurrentUser()
+        set({ user: data, isAuthenticated: true, isLoading: false })
+      } catch (error) {
+        set({ user: null, isAuthenticated: false, isLoading: false })
+      }
+    }
 }))
 export { useAuth }

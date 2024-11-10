@@ -1,4 +1,4 @@
-  import { useState } from "react"
+  import { useEffect, useState } from "react"
   import { motion } from "framer-motion"
   import { Button } from "@/components/ui/button"
   import {
@@ -28,8 +28,15 @@
   import { BarChart, MessageSquare, Key, Smartphone, Copy, Eye, EyeOff, Send } from "lucide-react"
   import { Alert, AlertDescription } from "@/components/ui/alert"
   import { toast } from "sonner"
+  import { useAuth } from "@/hooks/useAuth"
 
   export default function Dashboard() {
+
+    const {user} = useAuth()
+
+    useEffect(() => {
+      console.log('Dashboard -- Logged in user:',user)
+    }, [user])
     const [receivedMessages] = useState([
       { id: 1, sender: '+1234567890', message: 'Yes, I received it', receivedAt: '2024-03-08 14:30' },
       { id: 2, sender: '+0987654321', message: 'Thanks for the update', receivedAt: '2024-03-08 15:45' },
