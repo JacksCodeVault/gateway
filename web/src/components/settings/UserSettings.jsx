@@ -5,22 +5,36 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
-import { userAPI } from "@/lib/api"
+import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
+import authService from "@/services/authService"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function UserSettings() {
+  const navigate = useNavigate()
   const [userData, setUserData] = useState({
     name: '',
     email: '',
     createdAt: ''
   })
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
   const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
 
   useEffect(() => {
     loadUserProfile()
@@ -28,8 +42,8 @@ export default function UserSettings() {
 
   const loadUserProfile = async () => {
     try {
-      const response = await userAPI.getProfile()
-      setUserData(response.data)
+      const response = await authService.getCurrentUser()
+      setUserData(response)
     } catch (error) {
       toast.error('Failed to load user profile')
     } finally {
@@ -37,34 +51,52 @@ export default function UserSettings() {
     }
   }
 
-  const handleUpdateProfile = async (e) => {
+  const handleUpdatePassword = async (e) => {
     e.preventDefault()
-    setIsSaving(true)
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('New passwords do not match')
+      return
+    }
+
+    setIsUpdating(true)
     try {
-      await userAPI.updateProfile(userData)
-      toast.success('Profile updated successfully')
+      await authService.changePassword(
+        passwordData.currentPassword,
+        passwordData.newPassword
+      )
+      toast.success('Password updated successfully')
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
     } catch (error) {
-      toast.error('Failed to update profile')
+      toast.error(error.message)
     } finally {
-      setIsSaving(false)
+      setIsUpdating(false)
     }
   }
 
-  const handleUpdatePassword = async (e) => {
-    e.preventDefault()
-    setIsSaving(true)
-    try {
-      await userAPI.updatePassword({ currentPassword, newPassword })
-      toast.success('Password updated successfully')
-      setIsDialogOpen(false)
-      setCurrentPassword('')
-      setNewPassword('')
-    } catch (error) {
-      toast.error('Failed to update password')
-    } finally {
-      setIsSaving(false)
-    }
-  }
+  // const handleDeleteAccount = async () => {
+  //   if (!deletePassword) {
+  //     toast.error('Please enter your password')
+  //     return
+  //   }
+
+  //   setIsDeleting(true)
+  //   try {
+  //     await authService.deleteAccount(deletePassword)
+  //     toast.success('Account deleted successfully')
+  //     navigate('/login')
+  //   } catch (error) {
+  //     toast.error(error.message)
+  //   } finally {
+  //     setIsDeleting(false)
+  //     setShowDeleteDialog(false)
+  //     setDeletePassword('')
+  //   }
+  // }
 
   if (isLoading) {
     return (
@@ -95,7 +127,7 @@ export default function UserSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input 
@@ -113,23 +145,13 @@ export default function UserSettings() {
                     disabled
                   />
                 </div>
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Member Since</Label>
                   <p className="text-sm text-muted-foreground">
                     {new Date(userData.createdAt).toLocaleDateString()}
                   </p>
-                </div>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </Button>
-              </form>
+                </div> */}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -139,63 +161,63 @@ export default function UserSettings() {
             <CardHeader>
               <CardTitle>Security Settings</CardTitle>
               <CardDescription>
-                Update your password and security preferences
+                Update your password
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>Change Password</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Change Password</DialogTitle>
-                    <DialogDescription>
-                      Enter your current password and a new password
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleUpdatePassword} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="current-password">Current Password</Label>
-                      <Input 
-                        id="current-password" 
-                        type="password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="new-password">New Password</Label>
-                      <Input 
-                        id="new-password" 
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                      />
-                    </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={isSaving}>
-                        {isSaving ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Updating...
-                          </>
-                        ) : (
-                          'Update Password'
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current-password">Current Password</Label>
+                  <Input 
+                    id="current-password" 
+                    type="password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({
+                      ...passwordData,
+                      currentPassword: e.target.value
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <Input 
+                    id="new-password" 
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({
+                      ...passwordData,
+                      newPassword: e.target.value
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <Input 
+                    id="confirm-password" 
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({
+                      ...passwordData,
+                      confirmPassword: e.target.value
+                    })}
+                  />
+                </div>
+                <Button type="submit" disabled={isUpdating}>
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating Password...
+                    </>
+                  ) : (
+                    'Update Password'
+                  )}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="danger">
+        {/* <TabsContent value="danger">
           <Card>
             <CardHeader>
               <CardTitle className="text-red-500">Danger Zone</CardTitle>
@@ -210,29 +232,65 @@ export default function UserSettings() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Once you delete your account, there is no going back. Please be certain.
                   </p>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="destructive">Delete Account</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Are you sure?</DialogTitle>
-                        <DialogDescription>
-                          This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
-                        <Button variant="outline">Cancel</Button>
-                        <Button variant="destructive">Yes, delete my account</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    variant="destructive"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    Delete Account
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
+
+      {/* <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Please enter your password to confirm account deletion.
+            </p>
+            <Input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Enter your password"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteDialog(false)
+                setDeletePassword('')
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Account'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog> */}
     </motion.div>
   )
 }

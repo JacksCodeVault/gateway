@@ -55,10 +55,18 @@ const useAuth = create((set) => ({
 
     checkAuth: async () => {
       try {
-        const { data } = await authService.getCurrentUser()
-        set({ user: data, isAuthenticated: true, isLoading: false })
+        const response = await authService.getCurrentUser()
+        set({ 
+          user: response.data, 
+          isAuthenticated: true, 
+          isLoading: false 
+        })
       } catch (error) {
-        set({ user: null, isAuthenticated: false, isLoading: false })
+        set({ 
+          user: null, 
+          isAuthenticated: false, 
+          isLoading: false 
+        })
       }
     }
 }))

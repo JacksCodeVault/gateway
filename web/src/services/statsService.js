@@ -1,9 +1,9 @@
-
-import api from '@/lib/api'
+import { gatewayAPI } from '@/lib/api'
 
 const statsService = {
   getStats: async () => {
-    return await api.get('/api/v1/stats')
+    const response = await gatewayAPI.getStats()
+    return response.data.data
   }
 }
 

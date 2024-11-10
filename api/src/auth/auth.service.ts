@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as admin from 'firebase-admin';
 import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+import { DeleteAccountDTO, RegisterInputDTO, LoginInputDTO, ChangePasswordDTO, ResetPasswordDTO } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -12,7 +13,7 @@ export class AuthService {
     this.db = admin.database();
   }
 
-  async register(userData: any) {
+  async register(userData: RegisterInputDTO) {
     const userRef = this.db.ref('users');
     const snapshot = await userRef.orderByChild('email').equalTo(userData.email).once('value');
     
@@ -38,7 +39,7 @@ export class AuthService {
     };
   }
 
-  async login(userData: any) {
+  async login(userData: LoginInputDTO) {
     const userRef = this.db.ref('users');
     const snapshot = await userRef.orderByChild('email').equalTo(userData.email).once('value');
     
@@ -58,6 +59,92 @@ export class AuthService {
       accessToken: this.jwtService.sign(payload),
       user: { id: userKey, ...user },
     };
+  }
+
+  async changePassword(data: ChangePasswordDTO, userId: string) {
+    const userRef = this.db.ref(`users/${userId}`);
+    const snapshot = await userRef.once('value');
+    const user = snapshot.val();
+
+    if (!(await bcrypt.compare(data.currentPassword, user.password))) {
+      throw new HttpException({ error: 'Current password is incorrect' }, HttpStatus.BAD_REQUEST);
+    }
+
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+    await userRef.update({ 
+      password: hashedPassword,
+      updatedAt: admin.database.ServerValue.TIMESTAMP 
+    });
+
+    return { success: true };
+  }
+
+  async resetPassword(data: ResetPasswordDTO) {
+    const userRef = this.db.ref('users');
+    const snapshot = await userRef.orderByChild('email').equalTo(data.email).once('value');
+  
+    if (!snapshot.exists()) {
+      throw new HttpException({ error: 'User not found' }, HttpStatus.NOT_FOUND);
+    }
+  
+    try {
+      await admin.auth().generatePasswordResetLink(data.email, {
+        url: process.env.PASSWORD_RESET_URL || 'http://localhost:3000/reset-success',
+      });
+      
+      return { 
+        success: true, 
+        message: 'Password reset link has been sent to your email' 
+      };
+    } catch (error) {
+      throw new HttpException(
+        { error: 'Failed to send reset email' },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async deleteAccount(input: DeleteAccountDTO, userId: string) {
+    const userRef = this.db.ref(`users/${userId}`);
+    const snapshot = await userRef.once('value');
+    
+    if (!snapshot.exists()) {
+      throw new HttpException({ error: 'User not found' }, HttpStatus.NOT_FOUND);
+    }
+  
+    const user = snapshot.val();
+    const isValidPassword = await bcrypt.compare(input.password, user.password);
+    
+    if (!isValidPassword) {
+      throw new HttpException({ error: 'Invalid password' }, HttpStatus.BAD_REQUEST);
+    }
+  
+    // Delete associated API keys
+    const apiKeysRef = this.db.ref('apiKeys');
+    const apiKeysSnapshot = await apiKeysRef.orderByChild('userId').equalTo(userId).once('value');
+    const deleteApiKeyPromises = [];
+    
+    apiKeysSnapshot.forEach(child => {
+      deleteApiKeyPromises.push(child.ref.remove());
+    });
+  
+    // Delete associated devices
+    const devicesRef = this.db.ref('devices');
+    const devicesSnapshot = await devicesRef.orderByChild('userId').equalTo(userId).once('value');
+    const deleteDevicePromises = [];
+    
+    devicesSnapshot.forEach(child => {
+      deleteDevicePromises.push(child.ref.remove());
+    });
+  
+    // Execute all deletions
+    await Promise.all([
+      ...deleteApiKeyPromises,
+      ...deleteDevicePromises,
+      userRef.remove()
+    ]);
+  
+    return { success: true, message: 'Account successfully deleted' };
   }
 
   async generateApiKey(userId: string) {
@@ -92,5 +179,28 @@ export class AuthService {
       }
     }
     return null;
+  }
+
+  async getApiKeys(userId: string) {
+    const apiKeysRef = this.db.ref('apiKeys');
+    const snapshot = await apiKeysRef.orderByChild('userId').equalTo(userId).once('value');
+    
+    const apiKeys = [];
+    snapshot.forEach(child => {
+      apiKeys.push({ id: child.key, ...child.val() });
+    });
+    return apiKeys;
+  }
+
+  async revokeApiKey(keyId: string, userId: string) {
+    const apiKeyRef = this.db.ref(`apiKeys/${keyId}`);
+    const snapshot = await apiKeyRef.once('value');
+
+    if (!snapshot.exists() || snapshot.val().userId !== userId) {
+      throw new HttpException({ error: 'API key not found' }, HttpStatus.NOT_FOUND);
+    }
+
+    await apiKeyRef.remove();
+    return { success: true };
   }
 }

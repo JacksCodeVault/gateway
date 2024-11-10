@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { SMSType } from './sms-type.emum';
 import { AuthService } from '../auth/auth.service';
+import { ReceivedSMSDTO, RegisterDeviceInputDTO, SendSMSInputDTO } from './gateway.dto';
 
 @Injectable()
 export class GatewayService {
@@ -11,7 +12,22 @@ export class GatewayService {
     this.db = admin.database();
   }
 
-  async registerDevice(input: any, user: any) {
+  // Get statistics for a specific user including device and SMS counts
+  async getStatsForUser(user: any) {
+    const devices = await this.getDevicesForUser(user);
+    const totalDevices = devices.length;
+    const totalSentSMS = devices.reduce((acc, device) => acc + (device.sentSMSCount || 0), 0);
+    const totalReceivedSMS = devices.reduce((acc, device) => acc + (device.receivedSMSCount || 0), 0);
+
+    return {
+      totalDevices,
+      totalSentSMS,
+      totalReceivedSMS,
+    };
+  }
+
+  // Register a new device for a user
+  async registerDevice(input: RegisterDeviceInputDTO, user: any) {
     const deviceRef = this.db.ref('devices').push();
     const device = {
       userId: user.id,
@@ -25,11 +41,13 @@ export class GatewayService {
     return { id: deviceRef.key, ...device };
   }
 
+  // Get device by ID
   async getDeviceById(deviceId: string) {
     const snapshot = await this.db.ref(`devices/${deviceId}`).once('value');
     return snapshot.exists() ? { id: deviceId, ...snapshot.val() } : null;
   }
 
+  // Get all devices for a specific user
   async getDevicesForUser(user: any) {
     const snapshot = await this.db.ref('devices')
       .orderByChild('userId')
@@ -43,7 +61,36 @@ export class GatewayService {
     return devices;
   }
 
-  async sendSMS(deviceId: string, smsData: any) {
+  // Update device information
+  async updateDevice(deviceId: string, input: RegisterDeviceInputDTO) {
+    const device = await this.getDeviceById(deviceId);
+    if (!device) {
+      throw new HttpException({ error: 'Device not found' }, HttpStatus.NOT_FOUND);
+    }
+
+    const updates = {
+      ...device,
+      ...input,
+      updatedAt: admin.database.ServerValue.TIMESTAMP,
+    };
+
+    await this.db.ref(`devices/${deviceId}`).update(updates);
+    return { id: deviceId, ...updates };
+  }
+
+  // Delete a device
+  async deleteDevice(deviceId: string) {
+    const device = await this.getDeviceById(deviceId);
+    if (!device) {
+      throw new HttpException({ error: 'Device not found' }, HttpStatus.NOT_FOUND);
+    }
+
+    await this.db.ref(`devices/${deviceId}`).remove();
+    return { success: true };
+  }
+
+  // Send SMS through a device
+  async sendSMS(deviceId: string, smsData: SendSMSInputDTO) {
     const device = await this.getDeviceById(deviceId);
     if (!device?.enabled) {
       throw new HttpException(
@@ -52,6 +99,7 @@ export class GatewayService {
       );
     }
 
+    // Create a new SMS batch
     const batchRef = this.db.ref('smsBatches').push();
     const batch = {
       deviceId,
@@ -63,6 +111,7 @@ export class GatewayService {
 
     await batchRef.set(batch);
 
+    // Create individual SMS entries for each recipient
     const smsPromises = smsData.recipients.map(recipient => {
       const smsRef = this.db.ref('sms').push();
       return smsRef.set({
@@ -77,7 +126,7 @@ export class GatewayService {
 
     await Promise.all(smsPromises);
 
-    // Send FCM message to device
+    // Send FCM notification to device
     const message = {
       data: {
         type: 'SMS_REQUEST',
@@ -101,6 +150,50 @@ export class GatewayService {
     }
   }
 
+  // Handle received SMS from device
+  async receiveSMS(deviceId: string, dto: ReceivedSMSDTO) {
+    const device = await this.getDeviceById(deviceId);
+    if (!device) {
+      throw new HttpException({ error: 'Device not found' }, HttpStatus.NOT_FOUND);
+    }
+
+    const smsRef = this.db.ref('sms').push();
+    const sms = {
+      deviceId,
+      message: dto.message,
+      sender: dto.sender,
+      type: SMSType.RECEIVED,
+      receivedAt: dto.receivedAt || admin.database.ServerValue.TIMESTAMP,
+      createdAt: admin.database.ServerValue.TIMESTAMP,
+    };
+
+    await smsRef.set(sms);
+    await this.db.ref(`devices/${deviceId}`).update({
+      receivedSMSCount: (device.receivedSMSCount || 0) + 1,
+    });
+
+    return { id: smsRef.key, ...sms };
+  }
+
+  // Get all received SMS for a device
+  async getReceivedSMS(deviceId: string) {
+    const snapshot = await this.db.ref('sms')
+      .orderByChild('deviceId')
+      .equalTo(deviceId)
+      .once('value');
+
+    const messages = [];
+    snapshot.forEach(child => {
+      const sms = child.val();
+      if (sms.type === SMSType.RECEIVED) {
+        messages.push({ id: child.key, ...sms });
+      }
+    });
+
+    return messages;
+  }
+
+  // Helper function to create a preview of recipients
   private getRecipientsPreview(recipients: string[]): string {
     if (recipients.length <= 2) return recipients.join(' and ');
     return `${recipients[0]}, ${recipients[1]}, and ${recipients.length - 2} others`;

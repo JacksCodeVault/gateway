@@ -10,6 +10,7 @@ import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import ApiKeys from "@/components/api/ApiKeys";
+import ResetPassword from "@/components/auth/ResetPassword";
 
 export default function AppRoutes() {
   return (
@@ -18,6 +19,8 @@ export default function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
         <Route
           path="/dashboard"
           element={

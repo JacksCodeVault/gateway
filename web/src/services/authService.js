@@ -45,6 +45,60 @@
       }
       throw new Error('No token received')
     },
+
+    resetPassword: async (email) => {
+      try {
+        const response = await authAPI.resetPassword({ email })
+        return response.data.data
+      } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to send reset instructions')
+      }
+    },
+  
+    changePassword: async (currentPassword, newPassword) => {
+      try {
+        const response = await authAPI.changePassword({
+          currentPassword,
+          newPassword
+        })
+        return response.data.data
+      } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to update password')
+      }
+    },
+
+    deleteAccount: async (password) => {
+      try {
+        const response = await authAPI.deleteAccount({ password })
+        localStorage.removeItem('token')
+        return response.data.data
+      } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to delete account')
+      }
+    },
+
+    getApiKeys: async () => {
+      const response = await authAPI.getApiKeys()
+      return response.data.data.map(key => ({
+        ...key,
+        status: 'active' // Set default status for existing keys
+      }))
+    },
+  
+    generateApiKey: async () => {
+      const response = await authAPI.generateApiKey()
+      return {
+        id: response.data.data.apiKey,
+        key: response.data.data.apiKey,
+        createdAt: new Date().toISOString(),
+        status: 'active'
+      }
+    },
+  
+    revokeApiKey: async (keyId) => {
+      const response = await authAPI.revokeApiKey(keyId)
+      return response.data.data
+    },
   
 
     logout: () => {
