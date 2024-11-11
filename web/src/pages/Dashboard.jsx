@@ -48,9 +48,10 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [messageForm, setMessageForm] = useState({
     deviceId: '',
-    recipient: '',
+    recipient: '',  // This will be converted to array when sending
     message: ''
   })
+  
   const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
@@ -99,9 +100,10 @@ export default function Dashboard() {
     setIsSending(true)
     try {
       await gatewayService.sendSMS(messageForm.deviceId, {
-        recipient: messageForm.recipient,
-        message: messageForm.message
+        message: messageForm.message,
+        recipients: [messageForm.recipient]  // Convert single recipient to array
       })
+      
       
       toast.success('Message sent successfully')
       setMessageForm({

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "470504583266",
+    "firebase_url": "https://sms-sync-bridge-default-rtdb.firebaseio.com",
+    "project_id": "sms-sync-bridge",
+    "storage_bucket": "sms-sync-bridge.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:470504583266:android:ebe3794bb4435a7c66613b",
+        "android_client_info": {
+          "package_name": "com.zahra.smsgateway"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "470504583266-vm84judkq7tk6o7l067tfh70qd8nrjh3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAy4P_43ykTQDbzy3kmaJDarLUY5L_VU5U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "470504583266-vm84judkq7tk6o7l067tfh70qd8nrjh3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

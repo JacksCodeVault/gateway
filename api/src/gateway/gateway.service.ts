@@ -12,19 +12,36 @@ export class GatewayService {
     this.db = admin.database();
   }
 
-  // Get statistics for a specific user including device and SMS counts
   async getStatsForUser(user: any) {
     const devices = await this.getDevicesForUser(user);
     const totalDevices = devices.length;
-    const totalSentSMS = devices.reduce((acc, device) => acc + (device.sentSMSCount || 0), 0);
-    const totalReceivedSMS = devices.reduce((acc, device) => acc + (device.receivedSMSCount || 0), 0);
+
+    // Get all SMS batches for user's devices
+    const deviceIds = devices.map(device => device.id);
+    const smsBatchesRef = this.db.ref('smsBatches');
+    const sentSMSSnapshot = await smsBatchesRef
+        .orderByChild('deviceId')
+        .once('value');
+    
+    let totalSentSMS = 0;
+    sentSMSSnapshot.forEach(child => {
+        const batch = child.val();
+        if (deviceIds.includes(batch.deviceId)) {
+            totalSentSMS += batch.recipientCount || 0;
+        }
+    });
+
+    // Get received SMS count
+    const totalReceivedSMS = devices.reduce((acc, device) => 
+        acc + (device.receivedSMSCount || 0), 0);
 
     return {
-      totalDevices,
-      totalSentSMS,
-      totalReceivedSMS,
+        totalDevices,
+        totalSentSMS,
+        totalReceivedSMS,
     };
-  }
+}
+
 
   // Register a new device for a user
   async registerDevice(input: RegisterDeviceInputDTO, user: any) {

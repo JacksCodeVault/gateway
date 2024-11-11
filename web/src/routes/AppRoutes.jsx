@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import ApiKeys from "@/components/api/ApiKeys";
 import ResetPassword from "@/components/auth/ResetPassword";
+import Documentation from "@/pages/Documentation";
 
 export default function AppRoutes() {
   return (
@@ -20,6 +21,7 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+       <Route path="/documentation" element={<Documentation />} />
 
         <Route
           path="/dashboard"

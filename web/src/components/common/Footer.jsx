@@ -19,7 +19,7 @@ export default function Footer() {
           <div className="space-y-3">
             <h3 className="font-semibold">Resources</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Documentation</a></li>
+              <li><a href="/documentation" className="text-sm text-muted-foreground hover:text-primary">Documentation</a></li>
               <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">API Reference</a></li>
               <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Guides</a></li>
               <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Examples</a></li>
