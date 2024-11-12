@@ -71,14 +71,19 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun setupInitialState() {
         deviceId = SharedPreferenceHelper.getSharedPreferenceString(context, AppConstants.SHARED_PREFS_DEVICE_ID_KEY, "")
-        deviceIdTxt.text = deviceId ?: "No Device ID"  // Add a default value
+        deviceIdTxt.text = deviceId
         deviceBrandAndModelTxt.text = "${Build.BRAND} ${Build.MODEL}"
-        registerDeviceBtn.text = if (deviceId.isNullOrEmpty()) "Register" else "Update"
-
-        apiKeyEditText.setText(SharedPreferenceHelper.getSharedPreferenceString(context, AppConstants.SHARED_PREFS_API_KEY_KEY, ""))
-        gatewaySwitch.isChecked = SharedPreferenceHelper.getSharedPreferenceBoolean(context, AppConstants.SHARED_PREFS_GATEWAY_ENABLED_KEY, false)
-        receiveSMSSwitch.isChecked = SharedPreferenceHelper.getSharedPreferenceBoolean(context, AppConstants.SHARED_PREFS_RECEIVE_SMS_ENABLED_KEY, false)
+        
+        // Ensure receive SMS is properly initialized
+        val receiveSMSEnabled = SharedPreferenceHelper.getSharedPreferenceBoolean(
+            context, 
+            AppConstants.SHARED_PREFS_RECEIVE_SMS_ENABLED_KEY, 
+            false
+        )
+        receiveSMSSwitch.isChecked = receiveSMSEnabled
+        Log.d(TAG, "Initial Receive SMS State: $receiveSMSEnabled")
     }
+    
 
     private fun setupClickListeners() {
         copyDeviceIdImgBtn.setOnClickListener { copyDeviceId() }
@@ -186,6 +191,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleReceiveSMSChange(button: CompoundButton, isChecked: Boolean) {
+        Log.d(TAG, """
+            📱 Receive SMS Toggle Changed:
+            New State: ${if(isChecked) "Enabled" else "Disabled"}
+            Device ID: ${deviceId ?: "Not Set"}
+            API Key: ${apiKeyEditText.text}
+        """.trimIndent())
+
         SharedPreferenceHelper.setSharedPreferenceBoolean(
             context,
             AppConstants.SHARED_PREFS_RECEIVE_SMS_ENABLED_KEY,
@@ -243,17 +255,33 @@ class MainActivity : AppCompatActivity() {
             registerDeviceBtn.text = "Update"
             return
         }
-
-        SharedPreferenceHelper.setSharedPreferenceString(context, AppConstants.SHARED_PREFS_API_KEY_KEY, apiKeyEditText.text.toString())
-        deviceId = response.body()?.data?.get("_id")?.toString() ?: ""
-        deviceIdTxt.text = deviceId
-        SharedPreferenceHelper.setSharedPreferenceString(context, AppConstants.SHARED_PREFS_DEVICE_ID_KEY,
-            deviceId.toString()
+    
+        // Extract device ID from response
+        val deviceId = response.body()?.data?.get("id").toString()
+        Log.d(TAG, "Received Device ID: $deviceId")
+    
+        // Save API Key
+        SharedPreferenceHelper.setSharedPreferenceString(
+            context, 
+            AppConstants.SHARED_PREFS_API_KEY_KEY, 
+            apiKeyEditText.text.toString()
         )
+    
+        // Save device ID
+        SharedPreferenceHelper.setSharedPreferenceString(
+            context,
+            AppConstants.SHARED_PREFS_DEVICE_ID_KEY,
+            deviceId
+        )
+    
+        // Update UI
+        deviceIdTxt.text = deviceId
         registerDeviceBtn.isEnabled = true
         registerDeviceBtn.text = "Update"
+    
         Snackbar.make(registerDeviceBtn, "Device Registration Successful", Snackbar.LENGTH_LONG).show()
     }
+    
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)

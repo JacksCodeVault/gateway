@@ -12,6 +12,7 @@ import com.zahra.smsgateway.dtos.SMSForwardResponseDTO
 import com.zahra.smsgateway.helpers.SharedPreferenceHelper
 import retrofit2.Call
 import retrofit2.Response
+import java.util.Date
 
 class SMSBroadcastReceiver : BroadcastReceiver() {
     companion object {
@@ -19,38 +20,57 @@ class SMSBroadcastReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG, "onReceive: ${intent.action}")
+        Log.d(TAG, "📱 SMS Broadcast Received: ${intent.action}")
 
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
-            Log.d(TAG, "Not Valid intent")
+            Log.d(TAG, "❌ Not a valid SMS intent")
             return
         }
 
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
         if (messages == null) {
-            Log.d(TAG, "No messages found")
+            Log.d(TAG, "❌ No messages found in intent")
             return
         }
 
         val deviceId = SharedPreferenceHelper.getSharedPreferenceString(
-            context, 
-            AppConstants.SHARED_PREFS_DEVICE_ID_KEY, 
-            ""
-        )
+    context,
+    AppConstants.SHARED_PREFS_DEVICE_ID_KEY,
+    ""
+)
+Log.d(TAG, "Device ID length: ${deviceId.length}")
+
         val apiKey = SharedPreferenceHelper.getSharedPreferenceString(
-            context, 
-            AppConstants.SHARED_PREFS_API_KEY_KEY, 
+            context,
+            AppConstants.SHARED_PREFS_API_KEY_KEY,
             ""
         )
         val receiveSMSEnabled = SharedPreferenceHelper.getSharedPreferenceBoolean(
-            context, 
-            AppConstants.SHARED_PREFS_RECEIVE_SMS_ENABLED_KEY, 
+            context,
+            AppConstants.SHARED_PREFS_RECEIVE_SMS_ENABLED_KEY,
             false
         )
 
+        Log.d(TAG, """
+            📱 Device Configuration:
+            Device ID: $deviceId
+            API Key: ${apiKey.take(10)}... (truncated)
+            SMS Forwarding Enabled: $receiveSMSEnabled
+        """.trimIndent())
+
         if (deviceId.isEmpty() || apiKey.isEmpty() || !receiveSMSEnabled) {
-            Log.d(TAG, "Device ID or API Key is empty or Receive SMS Feature is disabled")
+            Log.d(TAG, "❌ SMS Forwarding disabled or missing configuration")
             return
+        }
+
+        messages.forEach { message ->
+            Log.d(TAG, """
+                📨 New SMS Received:
+                From: ${message.originatingAddress}
+                Message: ${message.messageBody}
+                Timestamp: ${Date(message.timestampMillis)}
+                Raw Timestamp: ${message.timestampMillis}
+            """.trimIndent())
         }
 
         val receivedSMSDTO = SMSDTO().apply {
@@ -68,14 +88,14 @@ class SMSBroadcastReceiver : BroadcastReceiver() {
                     response: Response<SMSForwardResponseDTO>
                 ) {
                     if (response.isSuccessful) {
-                        Log.d(TAG, "SMS sent to server successfully")
+                        Log.d(TAG, "✅ SMS forwarded to server successfully")
                     } else {
-                        Log.e(TAG, "Failed to send SMS to server")
+                        Log.e(TAG, "❌ Failed to forward SMS to server: ${response.code()}")
                     }
                 }
 
                 override fun onFailure(call: Call<SMSForwardResponseDTO>, t: Throwable) {
-                    Log.e(TAG, "Failed to send SMS to server", t)
+                    Log.e(TAG, "❌ Failed to forward SMS to server", t)
                 }
             })
     }

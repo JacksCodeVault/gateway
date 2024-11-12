@@ -1,6 +1,7 @@
 package com.zahra.smsgateway.helpers
 
 import android.content.Context
+import android.util.Log
 
 object SharedPreferenceHelper {
     private const val PREF_FILE = "PREF"
@@ -27,8 +28,11 @@ object SharedPreferenceHelper {
     }
 
     fun getSharedPreferenceString(context: Context, key: String, defValue: String): String {
-        return context.getSharedPreferences(PREF_FILE, 0).getString(key, defValue) ?: defValue
+        val value = context.getSharedPreferences(PREF_FILE, 0).getString(key, defValue)
+        Log.d("SharedPrefs", "Getting $key: $value")
+        return value ?: defValue
     }
+    
 
     fun getSharedPreferenceInt(context: Context, key: String, defValue: Int): Int {
         return context.getSharedPreferences(PREF_FILE, 0).getInt(key, defValue)
