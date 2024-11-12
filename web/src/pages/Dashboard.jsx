@@ -82,12 +82,26 @@ export default function Dashboard() {
 
   const loadReceivedMessages = async (deviceId) => {
     try {
-      const response = await gatewayService.getReceivedSMS(deviceId)
-      setReceivedMessages(response.data || [])
+      const forwarded = await gatewayService.getForwardedMessages(deviceId)
+      
+      console.log('📨 Forwarded Messages:', forwarded)
+      console.log('📊 Total Messages:', forwarded?.data?.length || 0)
+  
+      const messages = forwarded?.data || []
+      messages.sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt))
+  
+      console.log('🔄 Sorted Messages:', messages)
+      
+      setReceivedMessages(messages)
+      toast.success(`Loaded ${messages.length} messages successfully`)
     } catch (error) {
-      toast.error('Failed to load received messages')
+      console.error('Message loading error:', error)
+      toast.error('Failed to load messages: ' + error.message)
     }
   }
+  
+  
+  
 
   const handleSendMessage = async (e) => {
     e.preventDefault()

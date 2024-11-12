@@ -237,3 +237,34 @@ export class StatsResponseDTO {
   @IsNumber()
   totalReceivedSMS: number
 }
+
+export class ForwardedMessageDTO {
+  @ApiProperty({ type: String })
+  id: string;
+
+  @ApiProperty({ type: String })
+  deviceId: string;
+
+  @ApiProperty({ type: String })
+  message: string;
+
+  @ApiProperty({ type: String })
+  sender: string;
+
+  @ApiProperty({ type: Number })
+  receivedAt: number;
+
+  @ApiProperty({ type: Number })
+  createdAt: number;
+
+  @ApiProperty({ type: Object })
+  deviceInfo: {
+      brand: string;
+      model: string;
+      manufacturer: string;
+  };
+
+  @ApiProperty({ type: String })
+  type: string;
+}
+

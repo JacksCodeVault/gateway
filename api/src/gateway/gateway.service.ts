@@ -168,30 +168,36 @@ export class GatewayService {
   }
 
   // Handle received SMS from device
-  async receiveSMS(deviceId: string, dto: ReceivedSMSDTO) {
-    const device = await this.getDeviceById(deviceId);
-    if (!device) {
+async receiveSMS(deviceId: string, dto: ReceivedSMSDTO) {
+  const device = await this.getDeviceById(deviceId);
+  if (!device) {
       throw new HttpException({ error: 'Device not found' }, HttpStatus.NOT_FOUND);
-    }
+  }
 
-    const smsRef = this.db.ref('sms').push();
-    const sms = {
+  // Create entry in forwardedMessages collection
+  const forwardedMessageRef = this.db.ref('forwardedMessages').push();
+  const forwardedMessage = {
       deviceId,
       message: dto.message,
       sender: dto.sender,
       type: SMSType.RECEIVED,
       receivedAt: dto.receivedAt || admin.database.ServerValue.TIMESTAMP,
       createdAt: admin.database.ServerValue.TIMESTAMP,
-    };
+      deviceInfo: {
+          brand: device.brand,
+          model: device.model,
+          manufacturer: device.manufacturer
+      }
+  };
 
-    await smsRef.set(sms);
-    await this.db.ref(`devices/${deviceId}`).update({
+  await forwardedMessageRef.set(forwardedMessage);
+  await this.db.ref(`devices/${deviceId}`).update({
       receivedSMSCount: (device.receivedSMSCount || 0) + 1,
-    });
+      lastForwardedMessageAt: admin.database.ServerValue.TIMESTAMP
+  });
 
-    return { id: smsRef.key, ...sms };
-  }
-
+  return { id: forwardedMessageRef.key, ...forwardedMessage };
+}
   // Get all received SMS for a device
   async getReceivedSMS(deviceId: string) {
     const snapshot = await this.db.ref('sms')
@@ -209,6 +215,33 @@ export class GatewayService {
 
     return messages;
   }
+
+  async getForwardedMessages(deviceId: string) {
+    const snapshot = await this.db.ref('forwardedMessages')
+        .orderByChild('deviceId')
+        .equalTo(deviceId)
+        .once('value');
+
+    const messages = [];
+    snapshot.forEach(child => {
+        const message = child.val();
+        messages.push({
+            id: child.key,
+            deviceId: message.deviceId,
+            message: message.message,
+            sender: message.sender,
+            receivedAt: message.receivedAt,
+            createdAt: message.createdAt,
+            deviceInfo: message.deviceInfo,
+            type: message.type
+        });
+    });
+
+    // Sort messages by createdAt in descending order (newest first)
+    return messages.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+
 
   // Helper function to create a preview of recipients
   private getRecipientsPreview(recipients: string[]): string {

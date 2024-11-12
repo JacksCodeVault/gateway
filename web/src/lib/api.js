@@ -51,8 +51,8 @@ export const gatewayAPI = {
   // SMS operations
   sendSMS: (deviceId, data) => api.post(`/api/v1/gateway/devices/${deviceId}/sendSMS`, data),
   receiveSMS: (deviceId, data) => api.post(`/api/v1/gateway/devices/${deviceId}/receiveSMS`, data),
-  getReceivedSMS: (deviceId) => api.get(`/api/v1/gateway/devices/${deviceId}/getReceivedSMS`)
-}
+  //getReceivedSMS: (deviceId) => api.get(`/api/v1/gateway/devices/${deviceId}/getReceivedSMS`),
+  getForwardedMessages: (deviceId) => api.get(`/api/v1/gateway/devices/${deviceId}/forwardedMessages`)}
 
 
 export default api

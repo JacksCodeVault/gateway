@@ -16,7 +16,8 @@ export const API_ENDPOINTS = {
     DEVICE_DETAIL: (id) => `/api/v1/gateway/devices/${id}`,
     SEND_SMS: (deviceId) => `/api/v1/gateway/devices/${deviceId}/sendSMS`,
     RECEIVE_SMS: (deviceId) => `/api/v1/gateway/devices/${deviceId}/receiveSMS`,
-    GET_RECEIVED_SMS: (deviceId) => `/api/v1/gateway/devices/${deviceId}/getReceivedSMS`
+    //GET_RECEIVED_SMS: (deviceId) => `/api/v1/gateway/devices/${deviceId}/getReceivedSMS`,
+    FORWARDED_MESSAGES: (deviceId) => `/api/v1/gateway/devices/${deviceId}/forwardedMessages`
   }
 }
 

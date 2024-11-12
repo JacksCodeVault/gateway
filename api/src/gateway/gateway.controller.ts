@@ -1,7 +1,7 @@
 import { Body, Controller, Param, Patch, Post, UseGuards, Request, Get, Delete, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { ReceivedSMSDTO, RegisterDeviceInputDTO, RetrieveSMSResponseDTO, SendSMSInputDTO } from './gateway.dto';
+import { ReceivedSMSDTO, RegisterDeviceInputDTO, RetrieveSMSResponseDTO, SendSMSInputDTO, ForwardedMessageDTO } from './gateway.dto';
 import { GatewayService } from './gateway.service';
 import { CanModifyDevice } from './guards/can-modify-device.guard';
 
@@ -66,6 +66,7 @@ export class GatewayController {
     const data = await this.gatewayService.receiveSMS(deviceId, dto);
     return { data };
   }
+
   @ApiOperation({ summary: 'Get received SMS from a device' })
   @ApiResponse({ status: 200, type: RetrieveSMSResponseDTO })
   @UseGuards(AuthGuard, CanModifyDevice)
@@ -74,4 +75,14 @@ export class GatewayController {
     const data = await this.gatewayService.getReceivedSMS(deviceId);
     return { data };
   }
+
+  @ApiOperation({ summary: 'Get forwarded messages from a device' })
+  @ApiResponse({ status: 200, type: [ForwardedMessageDTO] })
+  @UseGuards(AuthGuard, CanModifyDevice)
+  @Get('/devices/:id/forwardedMessages')
+  async getForwardedMessages(@Param('id') deviceId: string) {
+      const messages = await this.gatewayService.getForwardedMessages(deviceId);
+      return { data: messages };
+  }
+  
 }

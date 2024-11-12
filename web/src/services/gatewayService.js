@@ -39,8 +39,12 @@ const gatewayService = {
     return response.data
   },
 
-  getReceivedSMS: async (deviceId) => {
+/*   getReceivedSMS: async (deviceId) => {
     const response = await gatewayAPI.getReceivedSMS(deviceId)
+    return response.data
+  }, */
+  getForwardedMessages: async (deviceId) => {
+    const response = await gatewayAPI.getForwardedMessages(deviceId)
     return response.data
   }
 }
