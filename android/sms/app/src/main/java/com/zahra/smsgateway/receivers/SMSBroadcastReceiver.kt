@@ -32,25 +32,41 @@ class SMSBroadcastReceiver : BroadcastReceiver() {
             return
         }
 
-        val deviceId = SharedPreferenceHelper.getSharedPreferenceString(context, AppConstants.SHARED_PREFS_DEVICE_ID_KEY, "")
-        val apiKey = SharedPreferenceHelper.getSharedPreferenceString(context, AppConstants.SHARED_PREFS_API_KEY_KEY, "")
-        val receiveSMSEnabled = SharedPreferenceHelper.getSharedPreferenceBoolean(context, AppConstants.SHARED_PREFS_RECEIVE_SMS_ENABLED_KEY, false)
+        val deviceId = SharedPreferenceHelper.getSharedPreferenceString(
+            context, 
+            AppConstants.SHARED_PREFS_DEVICE_ID_KEY, 
+            ""
+        )
+        val apiKey = SharedPreferenceHelper.getSharedPreferenceString(
+            context, 
+            AppConstants.SHARED_PREFS_API_KEY_KEY, 
+            ""
+        )
+        val receiveSMSEnabled = SharedPreferenceHelper.getSharedPreferenceBoolean(
+            context, 
+            AppConstants.SHARED_PREFS_RECEIVE_SMS_ENABLED_KEY, 
+            false
+        )
 
         if (deviceId.isEmpty() || apiKey.isEmpty() || !receiveSMSEnabled) {
             Log.d(TAG, "Device ID or API Key is empty or Receive SMS Feature is disabled")
             return
         }
 
-        val receivedSMSDTO = SMSDTO()
-        messages.forEach { message ->
-            receivedSMSDTO.message = receivedSMSDTO.message + message.messageBody
-            receivedSMSDTO.sender = message.originatingAddress ?: ""
-            receivedSMSDTO.receivedAtInMillis = message.timestampMillis
+        val receivedSMSDTO = SMSDTO().apply {
+            messages.forEach { message ->
+                this.message = this.message + message.messageBody
+                this.sender = message.originatingAddress ?: ""
+                this.receivedAtInMillis = message.timestampMillis
+            }
         }
 
         ApiManager.getApiService().sendReceivedSMS(deviceId, apiKey, receivedSMSDTO)
             .enqueue(object : retrofit2.Callback<SMSForwardResponseDTO> {
-                override fun onResponse(call: Call<SMSForwardResponseDTO>, response: Response<SMSForwardResponseDTO>) {
+                override fun onResponse(
+                    call: Call<SMSForwardResponseDTO>,
+                    response: Response<SMSForwardResponseDTO>
+                ) {
                     if (response.isSuccessful) {
                         Log.d(TAG, "SMS sent to server successfully")
                     } else {

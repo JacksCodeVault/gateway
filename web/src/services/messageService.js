@@ -1,7 +1,7 @@
 import { gatewayAPI } from '@/lib/api'
 
 const messageService = {
-  sendMessage: async (deviceId, messageData) => {
+  /* sendMessage: async (deviceId, messageData) => {
     const response = await gatewayAPI.sendMessage(deviceId, messageData)
     return response.data
   },
@@ -14,7 +14,7 @@ const messageService = {
   getReceivedMessages: async (deviceId) => {
     const response = await gatewayAPI.getReceivedMessages(deviceId)
     return response.data
-  }
+  } */
 }
 
 export default messageService
