@@ -34,7 +34,15 @@ export default function Landing() {
             >
               Get Started
             </Button>
+            <Button
+            variant="outline"
+            className="hidden sm:inline-flex"
+            onClick={() => navigate("/dashboard")}
+            >
+              Dashboard
+            </Button>
           </div>
+          
         </div>
       </nav>
 
