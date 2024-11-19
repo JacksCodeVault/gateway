@@ -12,6 +12,7 @@ import DashboardLayout from "@/components/layouts/DashboardLayout";
 import ApiKeys from "@/components/api/ApiKeys";
 import ResetPassword from "@/components/auth/ResetPassword";
 import Documentation from "@/pages/Documentation";
+import Reports from "@/pages/Reports";
 
 export default function AppRoutes() {
   return (
@@ -70,6 +71,16 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/dashboard/reports"
+  element={
+    <ProtectedRoute>
+      <DashboardLayout>
+        <Reports />
+      </DashboardLayout>
+    </ProtectedRoute>
+  }
+/>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

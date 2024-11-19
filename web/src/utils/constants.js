@@ -18,6 +18,11 @@ export const API_ENDPOINTS = {
     RECEIVE_SMS: (deviceId) => `/api/v1/gateway/devices/${deviceId}/receiveSMS`,
     //GET_RECEIVED_SMS: (deviceId) => `/api/v1/gateway/devices/${deviceId}/getReceivedSMS`,
     FORWARDED_MESSAGES: (deviceId) => `/api/v1/gateway/devices/${deviceId}/forwardedMessages`
+  },
+  REPORTS: {
+    MESSAGES: '/api/v1/reports/messages',
+    DEVICES: '/api/v1/reports/devices',
+    EXPORT: '/api/v1/reports/export'
   }
 }
 

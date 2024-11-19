@@ -52,7 +52,15 @@ export const gatewayAPI = {
   sendSMS: (deviceId, data) => api.post(`/api/v1/gateway/devices/${deviceId}/sendSMS`, data),
   receiveSMS: (deviceId, data) => api.post(`/api/v1/gateway/devices/${deviceId}/receiveSMS`, data),
   //getReceivedSMS: (deviceId) => api.get(`/api/v1/gateway/devices/${deviceId}/getReceivedSMS`),
-  getForwardedMessages: (deviceId) => api.get(`/api/v1/gateway/devices/${deviceId}/forwardedMessages`)}
+  getForwardedMessages: (deviceId) => api.get(`/api/v1/gateway/devices/${deviceId}/forwardedMessages`)
+}
+
+export const reportsAPI = {
+  getMessageReport: (filters) => api.get('/api/v1/reports/messages', { params: filters }),
+  getDeviceReport: (filters) => api.get('/api/v1/reports/devices', { params: filters }), 
+  exportReport: (filters) => api.get('/api/v1/reports/export', { params: filters })
+}
+
 
 
 export default api

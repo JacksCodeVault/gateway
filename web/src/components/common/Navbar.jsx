@@ -1,7 +1,7 @@
 import { motion } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { MessageSquare, Settings, Users, LogOut, Smartphone, Key } from "lucide-react"
+import { MessageSquare, Settings, Users, LogOut, Smartphone, Key, BarChart2 } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 
 export default function Navbar() {
@@ -53,6 +53,14 @@ export default function Navbar() {
             <Smartphone className="mr-2 h-4 w-4" />
             Devices
           </Button>
+          <Button 
+  variant={location.pathname === '/dashboard/reports' ? 'default' : 'ghost'}
+  className="flex items-center"
+  onClick={() => navigate('/dashboard/reports')}
+>
+  <BarChart2 className="mr-2 h-4 w-4" />
+  Reports
+</Button>
           <Button 
             variant={location.pathname === '/dashboard/settings' ? 'default' : 'ghost'}
             className="flex items-center"
